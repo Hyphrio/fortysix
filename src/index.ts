@@ -1,10 +1,11 @@
 import { Router, Application } from "@oak/oak";
 import { random45 } from "./random";
-import { PrismaD1 } from "@prisma/adapter-d1";
-import { PrismaClient } from "@prisma/client";
 import { AppTokenAuthProvider } from "@twurple/auth";
 import { ApiClient } from "@twurple/api";
 import { calculateDifference } from "./utils";
+import { Kysely } from "kysely";
+import { DB } from "./db/types";
+import { D1Dialect } from "kysely-d1";
 
 const router = new Router();
 
@@ -23,21 +24,21 @@ router.get("/_/45", async function FortyFiveHandler(ctx) {
 		const helix = await twurple.users.getUserByName(user);
 
 		if (helix) {
-			const prisma: PrismaClient = ctx.state.prisma.client;
+			const kysely: Kysely<DB> = ctx.state.kysely.database;
 
 			if (fortyFive != 45) {
-				await prisma.attempts.create({
-					data: {
+				await kysely.insertInto('Attempts')
+					.values({
+						value: fortyFive,
 						helixId: helix.id,
-						timestamp,
 						difference: calculateDifference(fortyFive),
-						value: fortyFive
-					}
-				});
+						timestamp,
+					})
+					.executeTakeFirst();
 
 				ctx.response.body = `${helix.displayName}, ${fortyFive.toFixed(3)}`
 			} else {
-				await prisma.attempts.deleteMany({})
+				await kysely.deleteFrom('Attempts').execute()
 				ctx.response.body = `${helix.displayName} achieved perfect 45!`
 			}
 		}
@@ -49,12 +50,15 @@ router.get("/_/45", async function FortyFiveHandler(ctx) {
 })
 
 router.get("/_/best45", async function bestFortyFiveHandler(ctx) {
-	const prisma: PrismaClient = ctx.state.prisma.client;
-	const result = await prisma.attempts.findFirst({
-		orderBy: {
-			difference: "asc"
-		}
-	});
+	const kysely: Kysely<DB> = ctx.state.kysely.database;
+	const result = await kysely.selectFrom('Attempts')
+		.select((eb) =>
+			eb.fn.min('Attempts.difference').as('difference')
+		)
+		.select([
+			'Attempts.helixId', 'Attempts.value'
+		])
+		.executeTakeFirst();
 
 	if (result) {
 		const twurple: ApiClient = ctx.state.twurple.client;
@@ -77,15 +81,14 @@ router.get("/_/pb45", async function personalBestFortyFiveHandler(ctx) {
 		const helix = await twurple.users.getUserByName(user);
 
 		if (helix) {
-			const prisma: PrismaClient = ctx.state.prisma.client;
-			const result = await prisma.attempts.findFirst({
-				where: {
-					helixId: helix.id
-				},
-				orderBy: {
-					difference: "asc"
-				}
-			});
+			const kysely: Kysely<DB> = ctx.state.kysely.database;
+			const result = await kysely.selectFrom('Attempts')
+				.select((eb) =>
+					eb.fn.min('Attempts.difference').as('difference')
+				)
+				.where('Attempts.helixId', '=', helix.id)
+				.select('Attempts.value')
+				.executeTakeFirst();
 
 			if (result) {
 				ctx.response.body = `${helix.displayName}, ${result.value.toFixed(3)}`
@@ -100,9 +103,8 @@ router.get("/_/pb45", async function personalBestFortyFiveHandler(ctx) {
 })
 
 interface WorkerState {
-	prisma: {
-		adapter: PrismaD1,
-		client: PrismaClient
+	kysely: {
+		database: Kysely<DB>
 	},
 	twurple: {
 		authProvider: AppTokenAuthProvider,
@@ -112,9 +114,8 @@ interface WorkerState {
 
 export default {
 	async fetch(req, env, ctx): Promise<Response> {
-		// Prisma
-		const adapter = new PrismaD1(env.DB);
-		const prisma = new PrismaClient({ adapter });
+		// Kysely
+		const database = new Kysely<DB>({ dialect: new D1Dialect({ database: env.DB }) })
 
 		// Twurple
 		const authProvider = new AppTokenAuthProvider(
@@ -126,9 +127,8 @@ export default {
 		});
 
 		const state: WorkerState = {
-			prisma: {
-				adapter,
-				client: prisma,
+			kysely: {
+				database
 			},
 			twurple: {
 				authProvider,
