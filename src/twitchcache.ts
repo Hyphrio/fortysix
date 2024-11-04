@@ -37,7 +37,7 @@ class TwitchCache {
     }
 }
 
-const expiresIn = 1_800_000;
+const expiresIn = 21_600;
 
 type TwitchCachify = {
     id: string,
