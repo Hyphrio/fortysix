@@ -65,7 +65,7 @@ router.get("/_/best45", async function bestFortyFiveHandler(ctx) {
 		const user = await twurple.users.getUserById(result.helixId);
 
 		if (user) {
-			ctx.response.body = `${user.displayName}, ${result.value}`
+			ctx.response.body = `${user.displayName}, ${result.value.toFixed(3)}`
 		}
 	} else {
 		ctx.response.body = "Nobody have done a 45 yet."
