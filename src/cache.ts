@@ -16,24 +16,24 @@ class WorkersKVCache<T> implements UniversalCache<T> {
         this.kv = kv;
     }
 
-    insert(key: string[], value: T, opts?: UniversalCacheOptions): Promise<void> {
+    async insert(key: string[], value: T, opts?: UniversalCacheOptions): Promise<void> {
         const k = key.join(',');
         const v = JSON.stringify(value);
 
         if (opts) {
-            this.kv.put(k, v, { expiration: opts.expiresIn })
+            await this.kv.put(k, v, { expirationTtl: opts.expiresIn })
         } else {
-            this.kv.put(k, v)
+            await this.kv.put(k, v)
         }
 
         return Promise.resolve()
     }
-    get(key: string[]): Promise<T | null | undefined> {
+    async get(key: string[]): Promise<T | null | undefined> {
         const k = key.join(',');
 
         return this.kv.get(k, "json");
     }
-    delete(key: string[]): Promise<void> {
+    async delete(key: string[]): Promise<void> {
         const k = key.join(',');
 
         return this.kv.delete(k)
