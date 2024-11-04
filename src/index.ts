@@ -1,6 +1,5 @@
 import { Router, Application } from "@oak/oak";
 import { random45 } from "./random";
-import { AppTokenAuthProvider } from "@twurple/auth";
 import { ApiClient } from "@twurple/api";
 import { calculateDifference } from "./utils";
 import { Kysely } from "kysely";
