@@ -63,7 +63,7 @@ router.get("/_/best45", async function bestFortyFiveHandler(ctx) {
 		.executeTakeFirst();
 
 	if (result) {
-		const twurple: ApiClient = ctx.state.twurple.client;
+		const twurple: ApiClient = ctx.state.cache.twitch.makeClient();
 		const user = await twurple.users.getUserById(result.helixId);
 
 		if (user) {
@@ -104,17 +104,13 @@ router.get("/_/pb45", async function personalBestFortyFiveHandler(ctx) {
 	}
 })
 
-interface WorkerState {
+interface WorkerState extends Env {
 	kysely: {
 		database: Kysely<DB>
 	},
-	twurple: {
-		authProvider: AppTokenAuthProvider,
-		client: ApiClient
-	},
 	cache: {
 		twitch: TwitchCache
-	}
+	},
 }
 
 export default {
@@ -122,28 +118,19 @@ export default {
 		// Kysely
 		const database = new Kysely<DB>({ dialect: new D1Dialect({ database: env.DB }) })
 
-		// Twurple
-		const authProvider = new AppTokenAuthProvider(
-			env.TWITCH_CLIENT_ID,
-			env.TWITCH_CLIENT_SECRET
-		);
-		const twurple = new ApiClient({
-			authProvider
+		const twitch = new TwitchCache(new WorkersKVCache(env.helix_cache), {
+			clientId: env.TWITCH_CLIENT_ID,
+			clientSecret: env.TWITCH_CLIENT_SECRET
 		});
-
-		const twitch = new TwitchCache(new WorkersKVCache(env.helix_cache), twurple);
 
 		const state: WorkerState = {
 			kysely: {
 				database
 			},
-			twurple: {
-				authProvider,
-				client: twurple
-			},
 			cache: {
 				twitch
-			}
+			},
+			...env
 		};
 
 		// Oak

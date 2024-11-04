@@ -1,13 +1,21 @@
 import { ApiClient } from "@twurple/api";
 import { UniversalCache } from "./cache";
+import { AppTokenAuthProvider } from "@twurple/auth";
 
 class TwitchCache {
     private cacher: UniversalCache<TwitchCachify>;
-    private apiClient: ApiClient;
+    private authTokens: {
+        clientId: string,
+        clientSecret: string
+    };
+    private apiClient?: ApiClient;
 
-    constructor(cache: UniversalCache<TwitchCachify>, api: ApiClient) {
+    constructor(cache: UniversalCache<TwitchCachify>, authTokens: {
+        clientId: string,
+        clientSecret: string
+    }) {
         this.cacher = cache
-        this.apiClient = api
+        this.authTokens = authTokens
     }
 
     async getUserByName(username: string): Promise<TwitchCachify | undefined> {
@@ -20,7 +28,7 @@ class TwitchCache {
             return cache
         }
 
-        const apiCall = await this.apiClient.users.getUserByName(username);
+        const apiCall = await this.makeClient().users.getUserByName(username);
 
         if (apiCall) {
             const data = {
@@ -34,6 +42,14 @@ class TwitchCache {
         }
 
         return;
+    }
+
+    makeClient(): ApiClient {
+        if (this.apiClient) {
+            return this.apiClient
+        }
+
+        return new ApiClient({ authProvider: new AppTokenAuthProvider(this.authTokens.clientId, this.authTokens.clientSecret, []) })
     }
 }
 
