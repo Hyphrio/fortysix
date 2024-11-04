@@ -118,6 +118,25 @@ router.get("/_/pb45", async function personalBestFortyFiveHandler(ctx) {
 	}
 })
 
+router.get("/_/latestGoat45", async function bestFortyFiveHandler(ctx) {
+	const kysely: Kysely<DB> = ctx.state.kysely.database;
+	const result = await kysely.selectFrom('Goaters')
+		.selectAll()
+		.orderBy('Goaters.goatCount desc')
+		.executeTakeFirst();
+
+	if (result) {
+		const twurple: ApiClient = ctx.state.cache.twitch.makeClient();
+		const user = await twurple.users.getUserById(result.helixId);
+
+		if (user) {
+			ctx.response.body = `${user.displayName}, total attempts of ${result.totalAttempts}`
+		}
+	} else {
+		ctx.response.body = "Nobody have done a perfect 45 yet."
+	}
+})
+
 interface WorkerState extends Env {
 	kysely: {
 		database: Kysely<DB>

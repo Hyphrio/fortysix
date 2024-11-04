@@ -1,5 +1,3 @@
-
-
 -- CreateTable
 CREATE TABLE "Goaters" (
     "goatCount" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
