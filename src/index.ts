@@ -6,6 +6,8 @@ import { calculateDifference } from "./utils";
 import { Kysely } from "kysely";
 import { DB } from "./db/types";
 import { D1Dialect } from "kysely-d1";
+import { TwitchCache } from "./twitchcache";
+import { WorkersKVCache } from "./cache";
 
 const router = new Router();
 
@@ -20,8 +22,8 @@ router.get("/_/45", async function FortyFiveHandler(ctx) {
 	const timestamp = Date.now();
 
 	if (user) {
-		const twurple: ApiClient = ctx.state.twurple.client;
-		const helix = await twurple.users.getUserByName(user);
+		const twitch: TwitchCache = ctx.state.cache.twitch;
+		const helix = await twitch.getUserByName(user);
 
 		if (helix) {
 			const kysely: Kysely<DB> = ctx.state.kysely.database;
@@ -77,8 +79,8 @@ router.get("/_/pb45", async function personalBestFortyFiveHandler(ctx) {
 	const user = searchParams.get("user");
 
 	if (user) {
-		const twurple: ApiClient = ctx.state.twurple.client;
-		const helix = await twurple.users.getUserByName(user);
+		const twitch: TwitchCache = ctx.state.cache.twitch;
+		const helix = await twitch.getUserByName(user);
 
 		if (helix) {
 			const kysely: Kysely<DB> = ctx.state.kysely.database;
@@ -109,6 +111,9 @@ interface WorkerState {
 	twurple: {
 		authProvider: AppTokenAuthProvider,
 		client: ApiClient
+	},
+	cache: {
+		twitch: TwitchCache
 	}
 }
 
@@ -126,6 +131,8 @@ export default {
 			authProvider
 		});
 
+		const twitch = new TwitchCache(new WorkersKVCache(env.helix_cache), twurple);
+
 		const state: WorkerState = {
 			kysely: {
 				database
@@ -133,6 +140,9 @@ export default {
 			twurple: {
 				authProvider,
 				client: twurple
+			},
+			cache: {
+				twitch
 			}
 		};
 
