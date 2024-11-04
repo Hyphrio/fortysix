@@ -39,7 +39,20 @@ router.get("/_/45", async function FortyFiveHandler(ctx) {
 
 				ctx.response.body = `${helix.displayName}, ${fortyFive.toFixed(3)}`
 			} else {
-				await kysely.deleteFrom('Attempts').execute()
+				const totalAttempts = await kysely.selectFrom('Attempts')
+					.select((eb) => eb.fn.count<number>('Attempts.attempt').as('attempts'))
+					.where('Attempts.helixId', '=', helix.id)
+					.execute();
+
+				await kysely.deleteFrom('Attempts').execute();
+				await kysely.insertInto('Goaters')
+					.values({
+						helixId: helix.id,
+						timestamp,
+						totalAttempts: totalAttempts[0].attempts
+					})
+					.execute();
+
 				ctx.response.body = `${helix.displayName} achieved perfect 45!`
 			}
 		}
@@ -97,6 +110,8 @@ router.get("/_/pb45", async function personalBestFortyFiveHandler(ctx) {
 				ctx.response.body = `${user} did not do a 45 yet.`
 			}
 
+		} else {
+			ctx.response.body = "no pb yet. Do a !45."
 		}
 	} else {
 		ctx.response.body = "No user passed."

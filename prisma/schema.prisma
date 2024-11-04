@@ -23,3 +23,10 @@ model Attempts {
   timestamp  Int
   value      Float
 }
+
+model Goaters {
+  goatCount     Int    @id @default(autoincrement())
+  helixId       String
+  timestamp     Int
+  totalAttempts Int
+}

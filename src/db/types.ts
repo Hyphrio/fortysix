@@ -11,6 +11,13 @@ export type Attempts = {
     timestamp: number;
     value: number;
 };
+export type Goaters = {
+    goatCount: Generated<number>;
+    helixId: string;
+    timestamp: number;
+    totalAttempts: number;
+};
 export type DB = {
     Attempts: Attempts;
+    Goaters: Goaters;
 };
