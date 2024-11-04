@@ -22,8 +22,6 @@ class TwitchCache {
         const key = ["twitch", username.toLowerCase()];
         const cache = await this.cacher.get(key);
 
-        console.log(cache)
-
         if (cache) {
             return cache
         }

@@ -26,7 +26,7 @@ class WorkersKVCache<T> implements UniversalCache<T> {
             await this.kv.put(k, v)
         }
 
-        return Promise.resolve()
+        return;
     }
     async get(key: string[]): Promise<T | null | undefined> {
         const k = key.join(',');
