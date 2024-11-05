@@ -86,6 +86,29 @@ router.get("/_/best45", async function bestFortyFiveHandler(ctx) {
 	}
 })
 
+router.get("/_/worst45", async function bestFortyFiveHandler(ctx) {
+	const kysely: Kysely<DB> = ctx.state.kysely.database;
+	const result = await kysely.selectFrom('Attempts')
+		.select((eb) =>
+			eb.fn.max('Attempts.difference').as('difference')
+		)
+		.select([
+			'Attempts.helixId', 'Attempts.value'
+		])
+		.executeTakeFirst();
+
+	if (result) {
+		const twurple: ApiClient = ctx.state.cache.twitch.makeClient();
+		const user = await twurple.users.getUserById(result.helixId);
+
+		if (user) {
+			ctx.response.body = `${user.displayName}, ${result.value.toFixed(3)}`
+		}
+	} else {
+		ctx.response.body = "Nobody have done a 45 yet."
+	}
+})
+
 router.get("/_/pb45", async function personalBestFortyFiveHandler(ctx) {
 	const searchParams = ctx.request.url.searchParams;
 	const user = searchParams.get("user");
