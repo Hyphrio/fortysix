@@ -156,7 +156,7 @@ router.get("/_/latestGoat45", async function bestFortyFiveHandler(ctx) {
 			ctx.response.body = `${user.displayName}, total attempts of ${result.totalAttempts}`
 		}
 	} else {
-		ctx.response.body = "Nobody have done a perfect 45 yet."
+		ctx.response.body = "Nobody has done a perfect 45 yet."
 	}
 })
 
