@@ -6,7 +6,13 @@ function random45(): number {
 
     const prng = randomSeeded(new DataView(seed.buffer).getBigUint64(0));
 
-    let rand1 = new Decimal(Math.floor(randomBetween(0, 90, { prng }) * 100) / 100);
+    const rand0 = randomBetween(0, 90.001, { prng });
+
+    if (rand0 >= 90.000) {
+        return 90.000
+    }
+
+    let rand1 = new Decimal(Math.floor(rand0 * 100) / 100);
     const rand2 = randomIntegerBetween(0, 1, { prng });
     console.log(rand2)
 
