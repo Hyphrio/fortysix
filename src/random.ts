@@ -6,9 +6,9 @@ function random45(): number {
 
     const prng = randomSeeded(new DataView(seed.buffer).getBigUint64(0));
 
-    const rand0 = randomBetween(0, 90, { prng });
+    const rand0 = randomBetween(0, 90.001, { prng });
 
-    if (rand0 == 90) {
+    if (rand0 >= 90.000) {
         return 90.000
     }
 
