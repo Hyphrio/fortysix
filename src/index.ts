@@ -165,17 +165,19 @@ router.get("/_/query45", async function query45Handler(ctx) {
 	const value = searchParams.get("value");
 
 	if (value) {
+		const number = Number.parseFloat(value);
+
 		const kysely: Kysely<DB> = ctx.state.kysely.database;
 
 		const result = await kysely.selectFrom("Attempts")
 			.select((eb) => eb.fn.count("Attempts.attempt").as("attemptCount"))
-			.where("Attempts.value", "=", Number.parseFloat(value))
+			.where("Attempts.value", "=", number)
 			.executeTakeFirst();
 
 		if (result) {
-			ctx.response.body = `${value} has been gotten ${result.attemptCount} times.`
+			ctx.response.body = `${number.toPrecision(3)} has been gotten ${result.attemptCount} times.`
 		} else {
-			ctx.response.body = `${value} haven't been gotten yet.`
+			ctx.response.body = `${number.toPrecision(3)} haven't been gotten yet.`
 		}
 	} else {
 		ctx.response.body = "No value passed."
