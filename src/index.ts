@@ -160,6 +160,28 @@ router.get("/_/latestGoat45", async function bestFortyFiveHandler(ctx) {
 	}
 })
 
+router.get("/_/query45", async function query45Handler(ctx) {
+	const searchParams = ctx.request.url.searchParams;
+	const value = searchParams.get("value");
+
+	if (value) {
+		const kysely: Kysely<DB> = ctx.state.kysely.database;
+
+		const result = await kysely.selectFrom("Attempts")
+			.select((eb) => eb.fn.count("Attempts.attempt").as("attemptCount"))
+			.where("Attempts.value", "=", Number.parseFloat(value))
+			.executeTakeFirst();
+
+		if (result) {
+			ctx.response.body = `${result.attemptCount}`
+		} else {
+			ctx.response.body = "0"
+		}
+	} else {
+		ctx.response.body = "No value passed."
+	}
+})
+
 interface WorkerState extends Env {
 	kysely: {
 		database: Kysely<DB>
