@@ -173,9 +173,9 @@ router.get("/_/query45", async function query45Handler(ctx) {
 			.executeTakeFirst();
 
 		if (result) {
-			ctx.response.body = `Value has been gotten ${result.attemptCount} times.`
+			ctx.response.body = `${value} has been gotten ${result.attemptCount} times.`
 		} else {
-			ctx.response.body = "Value haven't been gotten yet."
+			ctx.response.body = `${value} haven't been gotten yet.`
 		}
 	} else {
 		ctx.response.body = "No value passed."
